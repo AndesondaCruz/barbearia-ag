@@ -1,0 +1,20 @@
+{
+  "barbearia-servicos": [
+    { "PutRequest": { "Item": {
+      "id": { "S": "corte" }, "nome": { "S": "Corte" },
+      "descricao": { "S": "Corte na tesoura ou máquina, com lavagem e finalização." },
+      "precoCentavos": { "N": "3500" }, "duracaoMinutos": { "N": "30" } } } },
+    { "PutRequest": { "Item": {
+      "id": { "S": "barba" }, "nome": { "S": "Barba" },
+      "descricao": { "S": "Barba desenhada na navalha com toalha quente." },
+      "precoCentavos": { "N": "2500" }, "duracaoMinutos": { "N": "30" } } } },
+    { "PutRequest": { "Item": {
+      "id": { "S": "corte-barba" }, "nome": { "S": "Corte + Barba" },
+      "descricao": { "S": "O combo completo, com desconto." },
+      "precoCentavos": { "N": "5500" }, "duracaoMinutos": { "N": "30" } } } },
+    { "PutRequest": { "Item": {
+      "id": { "S": "sobrancelha" }, "nome": { "S": "Sobrancelha" },
+      "descricao": { "S": "Acabamento na navalha." },
+      "precoCentavos": { "N": "1500" }, "duracaoMinutos": { "N": "30" } } } }
+  ]
+}

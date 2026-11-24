@@ -1,0 +1,22 @@
+{
+  "name": "barbearia-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Camada de negócios da Barbearia Navalha: API REST em AWS Lambda",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/services/*.test.ts",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --external:@aws-sdk/* --outfile=dist/index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
