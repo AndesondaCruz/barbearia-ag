@@ -71,14 +71,11 @@ function Agenda() {
               key={a.id}
               agendamento={a}
               mostrarCliente
-              acoes={
-                a.status === 'confirmado'
-                  ? [
-                      { status: 'concluido', rotulo: 'Concluir' },
-                      { status: 'cancelado', rotulo: 'Cancelar', perigo: true },
-                    ]
-                  : []
-              }
+              acoes={[
+                // A regra de quando concluir vem do backend; a tela só obedece.
+                ...(a.podeConcluir ? [{ status: 'concluido' as const, rotulo: 'Concluir' }] : []),
+                ...(a.podeCancelar ? [{ status: 'cancelado' as const, rotulo: 'Cancelar', perigo: true }] : []),
+              ]}
               aoAlterar={(status) => alterar.mutate({ id: a.id, status })}
               ocupado={alterar.isPending}
             />

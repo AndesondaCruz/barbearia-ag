@@ -11,7 +11,11 @@ const CLIENTE = { id: 'cliente-1', isBarbeiro: false };
 const OUTRO = { id: 'cliente-2', isBarbeiro: false };
 const BARBEIRO = { id: 'barbeiro-1', isBarbeiro: true };
 
+/** Relógio controlável para simular a passagem do tempo nos testes. */
+const relogio = { agora: AGORA };
+
 function montar() {
+  relogio.agora = AGORA;
   const tabela = new Map<string, Agendamento>();
   const chave = (d: string, h: string) => `${d}|${h}`;
   const agendamentos = {
@@ -37,7 +41,7 @@ function montar() {
     criar: async () => {},
     remover: async () => true,
   };
-  return criarAgendamentosService({ agendamentos, servicos, agora: () => AGORA });
+  return criarAgendamentosService({ agendamentos, servicos, agora: () => relogio.agora });
 }
 
 const pedido = (hora = '14:00', data = '2026-11-26') => ({ servicoId: 's1', data, hora, clienteNome: 'Ana' });
@@ -76,12 +80,33 @@ describe('agendamentosService', () => {
     await assert.rejects(svc.alterarStatus(OUTRO, a.id, { status: 'cancelado' }), { status: 404 });
   });
 
-  it('cliente não pode marcar como concluído (403); barbeiro pode', async () => {
+  it('cliente não pode marcar como concluído (403)', async () => {
     const svc = montar();
     const a = await svc.criar(CLIENTE, pedido());
     await assert.rejects(svc.alterarStatus(CLIENTE, a.id, { status: 'concluido' }), { status: 403 });
+  });
+
+  it('barbeiro não conclui antes do horário (400), mas conclui depois', async () => {
+    const svc = montar();
+    const a = await svc.criar(CLIENTE, pedido('14:00', '2026-11-25'));
+    assert.equal((await svc.listar(BARBEIRO))[0].podeConcluir, false);
+    await assert.rejects(svc.alterarStatus(BARBEIRO, a.id, { status: 'concluido' }), { status: 400 });
+
+    relogio.agora = new Date('2026-11-25T17:05:00Z'); // 14:05 em Fortaleza
+    assert.equal((await svc.listar(BARBEIRO))[0].podeConcluir, true);
     const concluido = await svc.alterarStatus(BARBEIRO, a.id, { status: 'concluido' });
     assert.equal(concluido.status, 'concluido');
+  });
+
+  it('barbeiro pode cancelar agendamento futuro, mas não altera um já concluído (409)', async () => {
+    const svc = montar();
+    const futuro = await svc.criar(CLIENTE, pedido('16:00'));
+    assert.equal((await svc.alterarStatus(BARBEIRO, futuro.id, { status: 'cancelado' })).status, 'cancelado');
+
+    const hoje = await svc.criar(CLIENTE, pedido('14:00', '2026-11-25'));
+    relogio.agora = new Date('2026-11-25T17:30:00Z');
+    await svc.alterarStatus(BARBEIRO, hoje.id, { status: 'concluido' });
+    await assert.rejects(svc.alterarStatus(BARBEIRO, hoje.id, { status: 'cancelado' }), { status: 409 });
   });
 
   it('cliente lista apenas os próprios agendamentos; barbeiro lista todos', async () => {

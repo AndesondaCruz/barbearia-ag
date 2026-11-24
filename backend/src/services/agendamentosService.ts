@@ -69,7 +69,10 @@ export function criarAgendamentosService(deps: Dependencias) {
   return {
     disponibilidade,
 
-    async listar(usuario: Usuario, filtroData?: string): Promise<(Agendamento & { podeCancelar: boolean })[]> {
+    async listar(
+      usuario: Usuario,
+      filtroData?: string,
+    ): Promise<(Agendamento & { podeCancelar: boolean; podeConcluir: boolean })[]> {
       if (filtroData !== undefined && !isData(filtroData)) {
         throw badRequest('Filtro de data deve estar no formato YYYY-MM-DD');
       }
@@ -87,7 +90,7 @@ export function criarAgendamentosService(deps: Dependencias) {
 
       return itens
         .sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora))
-        .map((a) => ({ ...a, podeCancelar: podeAlterar(usuario, a) }));
+        .map((a) => ({ ...a, podeCancelar: podeAlterar(usuario, a), podeConcluir: podeConcluir(usuario, a) }));
     },
 
     async buscar(usuario: Usuario, id: string): Promise<Agendamento> {
@@ -151,9 +154,15 @@ export function criarAgendamentosService(deps: Dependencias) {
         if (!podeAlterar(usuario, atual)) {
           throw badRequest('Este agendamento não pode mais ser cancelado');
         }
-      } else if (atual.status === 'cancelado' && novoStatus !== 'cancelado') {
-        // Reativar um cancelado poderia colidir com nova reserva no mesmo horário.
-        throw conflict('Agendamento cancelado não pode ser reativado');
+      } else {
+        // Só agendamentos confirmados mudam de status. Reativar um cancelado,
+        // por exemplo, poderia colidir com uma nova reserva no mesmo horário.
+        if (atual.status !== 'confirmado') {
+          throw conflict(`Agendamento já está ${atual.status} e não pode ser alterado`);
+        }
+        if (novoStatus === 'concluido' && !podeConcluir(usuario, atual)) {
+          throw badRequest('Só é possível concluir após o horário do atendimento');
+        }
       }
 
       return deps.agendamentos.atualizarStatus(atual.data, atual.hora, novoStatus);
@@ -165,5 +174,12 @@ export function criarAgendamentosService(deps: Dependencias) {
     if (usuario.isBarbeiro) return true;
     const { data, hora } = agora();
     return a.clienteId === usuario.id && a.data + a.hora > data + hora;
+  }
+
+  /** Concluir significa que o atendimento aconteceu: só depois do horário marcado. */
+  function podeConcluir(usuario: Usuario, a: Agendamento): boolean {
+    if (!usuario.isBarbeiro || a.status !== 'confirmado') return false;
+    const { data, hora } = agora();
+    return a.data + a.hora <= data + hora;
   }
 }

@@ -20,6 +20,7 @@ export interface Agendamento {
   precoCentavos: number;
   status: StatusAgendamento;
   podeCancelar?: boolean;
+  podeConcluir?: boolean;
 }
 
 export interface Disponibilidade {
