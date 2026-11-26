@@ -80,6 +80,8 @@ export async function iniciarLogin(): Promise<void> {
     state: estado,
     code_challenge: await desafioPkce(verificador),
     code_challenge_method: 'S256',
+    // Página de login do Cognito (Managed Login) em português.
+    lang: 'pt-BR',
   }).toString();
   window.location.assign(url.toString());
 }

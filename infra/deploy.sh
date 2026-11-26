@@ -9,5 +9,6 @@ bash "$DIR/03-auth.sh"
 bash "$DIR/04-api.sh"
 bash "$DIR/05-api-dominio.sh"
 bash "$DIR/06-frontend-deploy.sh"
+bash "$DIR/08-login-visual.sh"
 echo
 echo "Pronto. Próximo passo: bash infra/07-app-dominio.sh"
