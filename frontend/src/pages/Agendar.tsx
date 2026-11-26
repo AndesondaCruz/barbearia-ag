@@ -43,7 +43,7 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
       <div className="space-y-4">
         <Aviso tipo="sucesso">
           <p className="font-semibold">Agendamento confirmado!</p>
-          <p className="mt-1 capitalize">
+          <p className="mt-1">
             {nomeDoServico(confirmado.servicoNome, confirmado.opcao)} · {formatarData(confirmado.data)} às{' '}
             {confirmado.hora}
           </p>
@@ -186,7 +186,7 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
         {servicoEscolhido && hora && !faltaOpcao ? (
           <p className="text-zinc-300">
             {nomeDoServico(servicoEscolhido.nome, opcao || undefined)} ·{' '}
-            <span className="capitalize">{formatarData(data)}</span> às {hora}
+            {formatarData(data)} às {hora}
           </p>
         ) : (
           <p className="text-zinc-500">

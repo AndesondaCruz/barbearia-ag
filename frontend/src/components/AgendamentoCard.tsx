@@ -22,7 +22,7 @@ export function AgendamentoCard({ agendamento: a, mostrarCliente, acoes, aoAlter
           <span className="font-display text-2xl text-amber-400">{a.hora}</span>
           <StatusBadge status={a.status} />
         </div>
-        <p className="mt-1 capitalize text-zinc-300">{formatarData(a.data)}</p>
+        <p className="mt-1 text-zinc-300">{formatarData(a.data)}</p>
         <p className="text-sm text-zinc-400">
           {nomeDoServico(a.servicoNome, a.opcao)} · {formatarPreco(a.precoCentavos)}
           {mostrarCliente && <> · Cliente: <span className="text-zinc-200">{a.clienteNome}</span></>}

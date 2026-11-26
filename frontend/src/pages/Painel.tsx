@@ -126,7 +126,7 @@ function Ganhos() {
       {ganhos.isError && <Erro mensagem={ganhos.error.message} tentarNovamente={() => ganhos.refetch()} />}
       {g && (
         <>
-          <p className="text-sm capitalize text-zinc-400">{formatarMes(g.mes)}</p>
+          <p className="text-sm text-zinc-400">{formatarMes(g.mes)}</p>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <Cartao
               rotulo="Recebido"
