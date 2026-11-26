@@ -7,10 +7,12 @@ import { json, noContent, parseBody } from '../lib/http';
 import { agendamentosRepository } from '../repositories/agendamentosRepository';
 import { servicosRepository } from '../repositories/servicosRepository';
 import { criarAgendamentosService } from '../services/agendamentosService';
+import { criarRelatoriosService } from '../services/relatoriosService';
 import { criarServicosService } from '../services/servicosService';
 
 const servicos = criarServicosService(servicosRepository);
 const agendamentos = criarAgendamentosService({ agendamentos: agendamentosRepository, servicos: servicosRepository });
+const relatorios = criarRelatoriosService(agendamentosRepository);
 
 export interface Contexto {
   usuario: Usuario | null;
@@ -53,6 +55,9 @@ export const rotas: Record<string, Handler> = {
 
   'PATCH /agendamentos/{id}': async (ctx) =>
     json(200, await agendamentos.alterarStatus(exigirUsuario(ctx.usuario), ctx.params.id ?? '', ctx.body())),
+
+  'GET /relatorios/ganhos': async (ctx) =>
+    json(200, await relatorios.ganhosDoMes(exigirUsuario(ctx.usuario), ctx.query.mes)),
 };
 
 export function contextoDoEvento(event: APIGatewayProxyEventV2WithJWTAuthorizer): Contexto {

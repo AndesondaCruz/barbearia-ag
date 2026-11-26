@@ -7,6 +7,7 @@ export interface Servico {
   descricao: string;
   precoCentavos: number;
   duracaoMinutos: number;
+  opcoes?: string[];
 }
 
 export type StatusAgendamento = 'confirmado' | 'cancelado' | 'concluido';
@@ -17,6 +18,7 @@ export interface Agendamento {
   hora: string;
   clienteNome: string;
   servicoNome: string;
+  opcao?: string;
   precoCentavos: number;
   status: StatusAgendamento;
   podeCancelar?: boolean;
@@ -28,6 +30,18 @@ export interface Disponibilidade {
   aberto: boolean;
   motivo: string | null;
   horarios: string[];
+}
+
+export interface GanhosDoMes {
+  mes: string;
+  recebidoCentavos: number;
+  atendimentosConcluidos: number;
+  ticketMedioCentavos: number;
+  previstoCentavos: number;
+  atendimentosPendentes: number;
+  cancelados: number;
+  porServico: { servico: string; quantidade: number; totalCentavos: number }[];
+  porDia: { data: string; totalCentavos: number }[];
 }
 
 export class ApiError extends Error {
@@ -71,7 +85,7 @@ async function requisicao<T>(metodo: string, caminho: string, corpo?: unknown, a
 
 export const api = {
   listarServicos: () => requisicao<Servico[]>('GET', '/servicos', undefined, false),
-  criarServico: (s: { nome: string; descricao: string; precoCentavos: number }) =>
+  criarServico: (s: { nome: string; descricao: string; precoCentavos: number; opcoes?: string[] }) =>
     requisicao<Servico>('POST', '/servicos', s),
   removerServico: (id: string) => requisicao<void>('DELETE', `/servicos/${encodeURIComponent(id)}`),
 
@@ -80,8 +94,10 @@ export const api = {
 
   listarAgendamentos: (data?: string) =>
     requisicao<Agendamento[]>('GET', `/agendamentos${data ? `?data=${data}` : ''}`),
-  criarAgendamento: (a: { servicoId: string; data: string; hora: string; clienteNome: string }) =>
+  criarAgendamento: (a: { servicoId: string; data: string; hora: string; clienteNome: string; opcao?: string }) =>
     requisicao<Agendamento>('POST', '/agendamentos', a),
   alterarStatus: (id: string, status: StatusAgendamento) =>
     requisicao<Agendamento>('PATCH', `/agendamentos/${encodeURIComponent(id)}`, { status }),
+
+  ganhosDoMes: (mes: string) => requisicao<GanhosDoMes>('GET', `/relatorios/ganhos?mes=${mes}`),
 };

@@ -5,7 +5,7 @@
   "description": "Camada de negócios da Barbearia Navalha: API REST em AWS Lambda",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/services/*.test.ts",
+    "test": "tsx --test src/services/agendamentosService.test.ts src/services/relatoriosService.test.ts",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --external:@aws-sdk/* --outfile=dist/index.js"
   },
   "dependencies": {

@@ -38,4 +38,14 @@ if [ "$QTD" = "0" ]; then
   aws dynamodb batch-write-item --request-items "file://$RAIZ/infra/servicos-iniciais.json" > /dev/null
 fi
 
+# Serviços de corte oferecem a escolha entre tesoura e máquina.
+# A condição evita criar um item novo se o serviço tiver sido removido pelo barbeiro.
+for id in corte corte-barba; do
+  aws dynamodb update-item --table-name "$TABELA_SERVICOS" --key "{\"id\":{\"S\":\"$id\"}}" \
+    --update-expression "SET opcoes = :o" \
+    --condition-expression "attribute_exists(id)" \
+    --expression-attribute-values '{":o":{"L":[{"S":"Tesoura"},{"S":"Máquina"}]}}' 2> /dev/null \
+    && echo "  opções Tesoura/Máquina em: $id" || true
+done
+
 echo "Camada de dados pronta."

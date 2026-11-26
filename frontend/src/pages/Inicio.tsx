@@ -40,7 +40,9 @@ export function Inicio({ irParaAgendar }: { irParaAgendar: () => void }) {
                     <span className="font-display text-lg text-amber-400">{formatarPreco(s.precoCentavos)}</span>
                   </div>
                   <p className="mt-2 text-sm text-zinc-400">{s.descricao}</p>
-                  <p className="mt-3 text-xs text-zinc-500">{s.duracaoMinutos} min</p>
+                  <p className="mt-3 text-xs text-zinc-500">
+                    {s.duracaoMinutos} min{s.opcoes && ` · ${s.opcoes.join(' ou ')}`}
+                  </p>
                 </li>
               ))}
             </ul>

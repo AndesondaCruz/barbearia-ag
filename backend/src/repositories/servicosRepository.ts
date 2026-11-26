@@ -8,6 +8,8 @@ export interface Servico {
   descricao: string;
   precoCentavos: number;
   duracaoMinutos: number;
+  /** Variações que o cliente escolhe ao agendar, ex.: ["Tesoura", "Máquina"]. */
+  opcoes?: string[];
 }
 
 /** Camada de dados: acesso à tabela de serviços. Sem regra de negócio aqui. */

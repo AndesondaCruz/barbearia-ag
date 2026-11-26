@@ -10,8 +10,8 @@ Sistema de agendamento online para uma barbearia, desenvolvido como projeto fina
 | Perfil | O que pode fazer |
 |---|---|
 | Visitante | Ver serviços e preços; consultar horários livres de qualquer dia |
-| Cliente (logado) | Agendar um horário; ver e cancelar os próprios agendamentos |
-| Barbeiro (grupo `barbeiro`) | Ver a agenda de qualquer dia com o total previsto; concluir ou cancelar atendimentos; cadastrar e remover serviços |
+| Cliente (logado) | Agendar um horário (escolhendo corte na tesoura ou na máquina, quando o serviço tem corte); ver e cancelar os próprios agendamentos |
+| Barbeiro (grupo `barbeiro`) | Ver a agenda de qualquer dia; concluir (após o horário) ou cancelar atendimentos; ver os ganhos de cada mês; cadastrar e remover serviços |
 
 ## Arquitetura em três camadas
 
@@ -62,6 +62,7 @@ Sistema de agendamento online para uma barbearia, desenvolvido como projeto fina
 | POST | `/agendamentos` | autenticado | Cria um agendamento |
 | GET | `/agendamentos/{id}` | dono ou barbeiro | Detalhe de um agendamento |
 | PATCH | `/agendamentos/{id}` | dono (cancelar) ou barbeiro | Altera o status |
+| GET | `/relatorios/ganhos?mes=YYYY-MM` | barbeiro | Recebido (concluídos), a receber, ticket médio, cancelados e totais por serviço |
 
 Códigos de resposta: `200`, `201`, `204`, `400` (validação), `401` (sem token válido), `403` (perfil sem permissão), `404`, `409` (horário ocupado).
 

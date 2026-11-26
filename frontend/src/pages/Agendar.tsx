@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Aviso, Carregando, Erro, Vazio } from '../components/Feedback';
 import { api, type Agendamento } from '../lib/api';
 import type { UsuarioSessao } from '../lib/auth';
-import { formatarData, formatarPreco, hojeIso } from '../lib/format';
+import { formatarData, formatarPreco, hojeIso, nomeDoServico } from '../lib/format';
 
 interface Props {
   usuario: UsuarioSessao | null;
@@ -14,6 +14,7 @@ interface Props {
 export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
   const qc = useQueryClient();
   const [servicoId, setServicoId] = useState('');
+  const [opcao, setOpcao] = useState('');
   const [data, setData] = useState(hojeIso());
   const [hora, setHora] = useState('');
   const [confirmado, setConfirmado] = useState<Agendamento | null>(null);
@@ -43,7 +44,8 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
         <Aviso tipo="sucesso">
           <p className="font-semibold">Agendamento confirmado!</p>
           <p className="mt-1 capitalize">
-            {confirmado.servicoNome} · {formatarData(confirmado.data)} às {confirmado.hora}
+            {nomeDoServico(confirmado.servicoNome, confirmado.opcao)} · {formatarData(confirmado.data)} às{' '}
+            {confirmado.hora}
           </p>
         </Aviso>
         <div className="flex gap-3">
@@ -59,7 +61,9 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
   }
 
   const servicoEscolhido = servicos.data?.find((s) => s.id === servicoId);
-  const podeConfirmar = Boolean(usuario && servicoId && data && hora) && !agendar.isPending;
+  const opcoes = servicoEscolhido?.opcoes ?? [];
+  const faltaOpcao = opcoes.length > 0 && !opcao;
+  const podeConfirmar = Boolean(usuario && servicoId && data && hora) && !faltaOpcao && !agendar.isPending;
 
   return (
     <div className="space-y-8">
@@ -83,7 +87,10 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
                   name="servico"
                   value={s.id}
                   checked={servicoId === s.id}
-                  onChange={() => setServicoId(s.id)}
+                  onChange={() => {
+                    setServicoId(s.id);
+                    setOpcao('');
+                  }}
                   className="accent-amber-400"
                 />
                 {s.nome}
@@ -92,6 +99,34 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
             </label>
           ))}
         </div>
+
+        {opcoes.length > 0 && (
+          <fieldset className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <legend className="px-1 text-sm font-semibold text-amber-300">Tipo de corte</legend>
+            <div className="flex flex-wrap gap-2" role="radiogroup">
+              {opcoes.map((o) => (
+                <label
+                  key={o}
+                  className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-semibold ${
+                    opcao === o
+                      ? 'border-amber-400 bg-amber-400 text-zinc-950'
+                      : 'border-zinc-700 bg-zinc-900 hover:border-amber-400'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="opcao"
+                    value={o}
+                    checked={opcao === o}
+                    onChange={() => setOpcao(o)}
+                    className="sr-only"
+                  />
+                  {o}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
       </fieldset>
 
       <div>
@@ -148,17 +183,22 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
       {agendar.isError && <Aviso tipo="erro">{agendar.error.message}</Aviso>}
 
       <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        {servicoEscolhido && hora ? (
-          <p className="capitalize text-zinc-300">
-            {servicoEscolhido.nome} · {formatarData(data)} às {hora}
+        {servicoEscolhido && hora && !faltaOpcao ? (
+          <p className="text-zinc-300">
+            {nomeDoServico(servicoEscolhido.nome, opcao || undefined)} ·{' '}
+            <span className="capitalize">{formatarData(data)}</span> às {hora}
           </p>
         ) : (
-          <p className="text-zinc-500">Selecione serviço, dia e horário.</p>
+          <p className="text-zinc-500">
+            {faltaOpcao ? 'Escolha o tipo de corte.' : 'Selecione serviço, dia e horário.'}
+          </p>
         )}
         {usuario ? (
           <button
             disabled={!podeConfirmar}
-            onClick={() => agendar.mutate({ servicoId, data, hora, clienteNome: usuario.nome })}
+            onClick={() =>
+              agendar.mutate({ servicoId, data, hora, clienteNome: usuario.nome, opcao: opcao || undefined })
+            }
             className="mt-4 rounded-lg bg-amber-400 px-6 py-3 font-semibold text-zinc-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {agendar.isPending ? 'Confirmando...' : 'Confirmar agendamento'}

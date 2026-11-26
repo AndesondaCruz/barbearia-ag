@@ -115,6 +115,15 @@ export function criarAgendamentosService(deps: Dependencias) {
       const servico = await deps.servicos.buscar(servicoId);
       if (!servico) throw badRequest('Serviço inexistente');
 
+      // Serviços com variações (ex.: corte na tesoura ou na máquina) exigem a escolha.
+      let opcao: string | undefined;
+      if (servico.opcoes?.length) {
+        if (typeof body.opcao !== 'string' || !servico.opcoes.includes(body.opcao)) {
+          throw badRequest(`Escolha uma opção para ${servico.nome}: ${servico.opcoes.join(' ou ')}`);
+        }
+        opcao = body.opcao;
+      }
+
       const disp = await disponibilidade(data);
       if (!disp.aberto) throw badRequest(disp.motivo ?? 'Data indisponível');
       if (!gradeDeHorarios().includes(hora)) throw badRequest('Horário fora da grade de atendimento');
@@ -129,6 +138,7 @@ export function criarAgendamentosService(deps: Dependencias) {
         clienteNome,
         servicoId: servico.id,
         servicoNome: servico.nome,
+        opcao,
         precoCentavos: servico.precoCentavos,
         status: 'confirmado',
         criadoEm: instante,

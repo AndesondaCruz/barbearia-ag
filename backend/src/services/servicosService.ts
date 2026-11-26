@@ -5,6 +5,19 @@ import type { Servico, servicosRepository } from '../repositories/servicosReposi
 
 type ServicosRepo = typeof servicosRepository;
 
+/** Opções são opcionais: até 5 textos curtos e sem repetição. */
+function validarOpcoes(valor: unknown): string[] | undefined {
+  if (valor === undefined || valor === null) return undefined;
+  if (!Array.isArray(valor) || !valor.every((o) => typeof o === 'string')) {
+    throw badRequest('opcoes deve ser uma lista de textos');
+  }
+  const opcoes = [...new Set(valor.map((o: string) => o.trim()).filter(Boolean))];
+  if (opcoes.length > 5 || opcoes.some((o) => o.length > 30)) {
+    throw badRequest('Informe no máximo 5 opções, com até 30 caracteres cada');
+  }
+  return opcoes.length > 0 ? opcoes : undefined;
+}
+
 /** Camada de negócios dos serviços (catálogo da barbearia). */
 export function criarServicosService(repo: ServicosRepo) {
   return {
@@ -32,6 +45,7 @@ export function criarServicosService(repo: ServicosRepo) {
         descricao,
         precoCentavos: precoCentavos as number,
         duracaoMinutos: 30,
+        opcoes: validarOpcoes(body.opcoes),
       };
       await repo.criar(servico);
       return servico;

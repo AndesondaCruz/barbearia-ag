@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Agendamento, StatusAgendamento } from '../lib/api';
-import { formatarData, formatarPreco } from '../lib/format';
+import { formatarData, formatarPreco, nomeDoServico } from '../lib/format';
 import { StatusBadge } from './Feedback';
 
 interface Props {
@@ -24,7 +24,7 @@ export function AgendamentoCard({ agendamento: a, mostrarCliente, acoes, aoAlter
         </div>
         <p className="mt-1 capitalize text-zinc-300">{formatarData(a.data)}</p>
         <p className="text-sm text-zinc-400">
-          {a.servicoNome} · {formatarPreco(a.precoCentavos)}
+          {nomeDoServico(a.servicoNome, a.opcao)} · {formatarPreco(a.precoCentavos)}
           {mostrarCliente && <> · Cliente: <span className="text-zinc-200">{a.clienteNome}</span></>}
         </p>
       </div>

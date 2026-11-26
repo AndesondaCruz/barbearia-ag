@@ -44,20 +44,6 @@ if [ -z "${API_ID:-}" ]; then
     --query AuthorizerId --output text)
   salvar AUTORIZADOR_ID "$AUTORIZADOR"
 
-  log "Criando rotas"
-  for rota in 'GET /servicos' 'GET /disponibilidade'; do
-    aws apigatewayv2 create-route --api-id "$API_ID" --route-key "$rota" \
-      --target "integrations/$INTEGRACAO_ID" > /dev/null
-    echo "  publica:   $rota"
-  done
-  for rota in 'POST /servicos' 'DELETE /servicos/{id}' 'GET /me' 'GET /agendamentos' \
-              'POST /agendamentos' 'GET /agendamentos/{id}' 'PATCH /agendamentos/{id}'; do
-    aws apigatewayv2 create-route --api-id "$API_ID" --route-key "$rota" \
-      --target "integrations/$INTEGRACAO_ID" \
-      --authorization-type JWT --authorizer-id "$AUTORIZADOR_ID" > /dev/null
-    echo "  protegida: $rota"
-  done
-
   aws apigatewayv2 create-stage --api-id "$API_ID" --stage-name '$default' --auto-deploy > /dev/null
   aws lambda add-permission --function-name "$LAMBDA_NOME" --statement-id apigw-barbearia \
     --action lambda:InvokeFunction --principal apigateway.amazonaws.com \
@@ -66,5 +52,29 @@ else
   log "Atualizando CORS da API"
   aws apigatewayv2 update-api --api-id "$API_ID" --cors-configuration "$CORS" > /dev/null
 fi
+
+# Rotas: cria só as que ainda não existem, então rodar de novo adiciona rotas novas sem duplicar.
+ROTAS_PUBLICAS=('GET /servicos' 'GET /disponibilidade')
+ROTAS_PROTEGIDAS=('POST /servicos' 'DELETE /servicos/{id}' 'GET /me' 'GET /agendamentos'
+                  'POST /agendamentos' 'GET /agendamentos/{id}' 'PATCH /agendamentos/{id}'
+                  'GET /relatorios/ganhos')
+EXISTENTES=$(aws apigatewayv2 get-routes --api-id "$API_ID" --query 'Items[].RouteKey' --output text | tr '\t' '\n')
+
+log "Sincronizando rotas"
+for rota in "${ROTAS_PUBLICAS[@]}"; do
+  if ! grep -qxF "$rota" <<< "$EXISTENTES"; then
+    aws apigatewayv2 create-route --api-id "$API_ID" --route-key "$rota" \
+      --target "integrations/$INTEGRACAO_ID" > /dev/null
+    echo "  publica (nova):   $rota"
+  fi
+done
+for rota in "${ROTAS_PROTEGIDAS[@]}"; do
+  if ! grep -qxF "$rota" <<< "$EXISTENTES"; then
+    aws apigatewayv2 create-route --api-id "$API_ID" --route-key "$rota" \
+      --target "integrations/$INTEGRACAO_ID" \
+      --authorization-type JWT --authorizer-id "$AUTORIZADOR_ID" > /dev/null
+    echo "  protegida (nova): $rota"
+  fi
+done
 
 echo "API: https://$API_ID.execute-api.$REGIAO.amazonaws.com"

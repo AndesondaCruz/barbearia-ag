@@ -7,6 +7,7 @@ import { criarAgendamentosService } from './agendamentosService';
 // 2026-11-25 (quarta) 10:00 em Fortaleza = 13:00 UTC
 const AGORA = new Date('2026-11-25T13:00:00Z');
 const CORTE: Servico = { id: 's1', nome: 'Corte', descricao: '', precoCentavos: 3500, duracaoMinutos: 30 };
+const CORTE_COM_OPCOES: Servico = { ...CORTE, id: 's2', opcoes: ['Tesoura', 'Máquina'] };
 const CLIENTE = { id: 'cliente-1', isBarbeiro: false };
 const OUTRO = { id: 'cliente-2', isBarbeiro: false };
 const BARBEIRO = { id: 'barbeiro-1', isBarbeiro: true };
@@ -37,7 +38,7 @@ function montar() {
   };
   const servicos = {
     listar: async () => [CORTE],
-    buscar: async (id: string) => (id === CORTE.id ? CORTE : null),
+    buscar: async (id: string) => [CORTE, CORTE_COM_OPCOES].find((s) => s.id === id) ?? null,
     criar: async () => {},
     remover: async () => true,
   };
@@ -115,6 +116,20 @@ describe('agendamentosService', () => {
     await svc.criar(OUTRO, pedido('15:00'));
     assert.equal((await svc.listar(CLIENTE)).length, 1);
     assert.equal((await svc.listar(BARBEIRO)).length, 2);
+  });
+
+  it('exige escolher tesoura ou máquina quando o serviço tem opções (400)', async () => {
+    const svc = montar();
+    const base = { ...pedido(), servicoId: 's2' };
+    await assert.rejects(svc.criar(CLIENTE, base), { status: 400 });
+    await assert.rejects(svc.criar(CLIENTE, { ...base, opcao: 'Navalha' }), { status: 400 });
+    const a = await svc.criar(CLIENTE, { ...base, opcao: 'Tesoura' });
+    assert.equal(a.opcao, 'Tesoura');
+  });
+
+  it('ignora opção em serviço que não tem opções', async () => {
+    const a = await montar().criar(CLIENTE, { ...pedido(), opcao: 'Tesoura' });
+    assert.equal(a.opcao, undefined);
   });
 
   it('rejeita horário fora da grade (400)', async () => {

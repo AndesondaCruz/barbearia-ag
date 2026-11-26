@@ -18,6 +18,8 @@ export interface Agendamento {
   clienteNome: string;
   servicoId: string;
   servicoNome: string;
+  /** Variação escolhida (ex.: "Tesoura"), quando o serviço tem opções. */
+  opcao?: string;
   precoCentavos: number;
   status: StatusAgendamento;
   criadoEm: string;

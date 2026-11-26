@@ -11,6 +11,16 @@ export function formatarData(data: string): string {
   });
 }
 
+/** Nome do serviço com a variação escolhida, ex.: "Corte (Tesoura)". */
+export const nomeDoServico = (servico: string, opcao?: string) => (opcao ? `${servico} (${opcao})` : servico);
+
+export const mesAtual = () => hojeIso().slice(0, 7);
+
+export function formatarMes(mes: string): string {
+  const [a, m] = mes.split('-').map(Number);
+  return new Date(a, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
+
 /** Data local (fuso do navegador) no formato YYYY-MM-DD. */
 export function hojeIso(somarDias = 0): string {
   const d = new Date();
