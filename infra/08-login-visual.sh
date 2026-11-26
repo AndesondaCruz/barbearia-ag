@@ -75,6 +75,19 @@ if "darkMode" in form:
     form["darkMode"]["backgroundColor"] = CARTAO
     form["darkMode"]["borderColor"] = BORDA
 
+# Campos de texto: fundo do site em vez do azul-marinho padrão.
+def fundo_dos_campos(no):
+    if isinstance(no, dict):
+        for k, v in no.items():
+            if k == "backgroundColor" and isinstance(v, str):
+                no[k] = FUNDO
+            else:
+                fundo_dos_campos(v)
+
+for classe in ("input", "dropDown"):
+    if classe in s["componentClasses"] and "darkMode" in s["componentClasses"][classe]:
+        fundo_dos_campos(s["componentClasses"][classe]["darkMode"])
+
 json.dump(s, open(saida, "w"))
 print("estilo gerado")
 PY
