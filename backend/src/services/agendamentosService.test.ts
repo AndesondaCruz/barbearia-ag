@@ -45,7 +45,13 @@ function montar() {
   return criarAgendamentosService({ agendamentos, servicos, agora: () => relogio.agora });
 }
 
-const pedido = (hora = '14:00', data = '2026-11-26') => ({ servicoId: 's1', data, hora, clienteNome: 'Ana' });
+const pedido = (hora = '14:00', data = '2026-11-26') => ({
+  servicoId: 's1',
+  data,
+  hora,
+  clienteNome: 'Ana',
+  clienteTelefone: '(84) 99999-8888',
+});
 
 describe('agendamentosService', () => {
   it('lista só horários futuros quando a data é hoje', async () => {
@@ -130,6 +136,21 @@ describe('agendamentosService', () => {
   it('ignora opção em serviço que não tem opções', async () => {
     const a = await montar().criar(CLIENTE, { ...pedido(), opcao: 'Tesoura' });
     assert.equal(a.opcao, undefined);
+  });
+
+  it('salva o telefone só com dígitos e exige telefone válido (400)', async () => {
+    const svc = montar();
+    const a = await svc.criar(CLIENTE, pedido());
+    assert.equal(a.clienteTelefone, '84999998888');
+    await assert.rejects(svc.criar(CLIENTE, { ...pedido('15:00'), clienteTelefone: '9999-8888' }), { status: 400 });
+    await assert.rejects(svc.criar(CLIENTE, { ...pedido('15:00'), clienteTelefone: undefined }), { status: 400 });
+    await assert.rejects(svc.criar(CLIENTE, { ...pedido('15:00'), clienteNome: ' ' }), { status: 400 });
+  });
+
+  it('aceita telefone fixo e com +55', async () => {
+    const svc = montar();
+    assert.equal((await svc.criar(CLIENTE, { ...pedido('15:00'), clienteTelefone: '(84) 3312-0000' })).clienteTelefone, '8433120000');
+    assert.equal((await svc.criar(CLIENTE, { ...pedido('16:00'), clienteTelefone: '+55 84 99999-8888' })).clienteTelefone, '84999998888');
   });
 
   it('rejeita horário fora da grade (400)', async () => {

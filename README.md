@@ -10,8 +10,8 @@ Sistema de agendamento online para uma barbearia, desenvolvido como projeto fina
 | Perfil | O que pode fazer |
 |---|---|
 | Visitante | Ver serviços e preços; consultar horários livres de qualquer dia |
-| Cliente (logado) | Agendar um horário (escolhendo corte na tesoura ou na máquina, quando o serviço tem corte); ver e cancelar os próprios agendamentos |
-| Barbeiro (grupo `barbeiro`) | Ver a agenda de qualquer dia; concluir (após o horário) ou cancelar atendimentos; ver os ganhos de cada mês; cadastrar e remover serviços |
+| Cliente (logado) | Agendar um horário informando nome e telefone (e corte na tesoura ou na máquina, quando o serviço tem corte); ver e cancelar os próprios agendamentos |
+| Barbeiro (grupo `barbeiro`) | Ver a agenda de qualquer dia com nome, telefone e atalho para o WhatsApp de cada cliente; concluir (após o horário) ou cancelar atendimentos; ver os ganhos de cada mês; cadastrar e remover serviços |
 
 ## Arquitetura em três camadas
 
@@ -59,7 +59,7 @@ Sistema de agendamento online para uma barbearia, desenvolvido como projeto fina
 | GET | `/disponibilidade?data=YYYY-MM-DD` | público | Horários livres do dia |
 | GET | `/me` | autenticado | Perfil do usuário (cliente ou barbeiro) |
 | GET | `/agendamentos?data=` | autenticado | Cliente: os seus. Barbeiro: todos |
-| POST | `/agendamentos` | autenticado | Cria um agendamento |
+| POST | `/agendamentos` | autenticado | Cria um agendamento (`servicoId`, `data`, `hora`, `clienteNome`, `clienteTelefone`, `opcao`) |
 | GET | `/agendamentos/{id}` | dono ou barbeiro | Detalhe de um agendamento |
 | PATCH | `/agendamentos/{id}` | dono (cancelar) ou barbeiro | Altera o status |
 | GET | `/relatorios/ganhos?mes=YYYY-MM` | barbeiro | Recebido (concluídos), a receber, ticket médio, cancelados e totais por serviço |

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Agendamento, StatusAgendamento } from '../lib/api';
-import { formatarData, formatarPreco, nomeDoServico } from '../lib/format';
+import { formatarData, formatarPreco, linkWhatsApp, mascaraTelefone, nomeDoServico } from '../lib/format';
 import { StatusBadge } from './Feedback';
 
 interface Props {
@@ -25,8 +25,30 @@ export function AgendamentoCard({ agendamento: a, mostrarCliente, acoes, aoAlter
         <p className="mt-1 text-zinc-300">{formatarData(a.data)}</p>
         <p className="text-sm text-zinc-400">
           {nomeDoServico(a.servicoNome, a.opcao)} · {formatarPreco(a.precoCentavos)}
-          {mostrarCliente && <> · Cliente: <span className="text-zinc-200">{a.clienteNome}</span></>}
         </p>
+        {mostrarCliente && (
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            <span className="text-zinc-200">{a.clienteNome}</span>
+            {a.clienteTelefone ? (
+              <>
+                <a href={`tel:+55${a.clienteTelefone}`} className="text-zinc-400 hover:text-zinc-200">
+                  {mascaraTelefone(a.clienteTelefone)}
+                </a>
+                <a
+                  href={linkWhatsApp(a.clienteTelefone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-md border border-emerald-700 px-2 py-0.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-900/40"
+                  aria-label={`Abrir conversa no WhatsApp com ${a.clienteNome}`}
+                >
+                  WhatsApp
+                </a>
+              </>
+            ) : (
+              <span className="text-xs text-zinc-500">sem telefone</span>
+            )}
+          </p>
+        )}
       </div>
 
       {acoes.length > 0 && (

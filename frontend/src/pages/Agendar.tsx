@@ -3,7 +3,24 @@ import { useState } from 'react';
 import { Aviso, Carregando, Erro, Vazio } from '../components/Feedback';
 import { api, type Agendamento } from '../lib/api';
 import type { UsuarioSessao } from '../lib/auth';
-import { formatarData, formatarPreco, hojeIso, nomeDoServico } from '../lib/format';
+import { formatarData, formatarPreco, hojeIso, mascaraTelefone, nomeDoServico, telefoneValido } from '../lib/format';
+
+/** Lembra o telefone neste navegador para o próximo agendamento (conveniência, não é obrigatório). */
+const CHAVE_TELEFONE = 'barbearia.telefone';
+function lerTelefoneSalvo(): string {
+  try {
+    return localStorage.getItem(CHAVE_TELEFONE) ?? '';
+  } catch {
+    return '';
+  }
+}
+function salvarTelefone(telefone: string) {
+  try {
+    localStorage.setItem(CHAVE_TELEFONE, telefone);
+  } catch {
+    // Armazenamento indisponível (ex.: modo privado): só não lembra.
+  }
+}
 
 interface Props {
   usuario: UsuarioSessao | null;
@@ -18,6 +35,8 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
   const [data, setData] = useState(hojeIso());
   const [hora, setHora] = useState('');
   const [confirmado, setConfirmado] = useState<Agendamento | null>(null);
+  const [nome, setNome] = useState(usuario?.nome ?? '');
+  const [telefone, setTelefone] = useState(lerTelefoneSalvo);
 
   const servicos = useQuery({ queryKey: ['servicos'], queryFn: api.listarServicos });
   const disponibilidade = useQuery({
@@ -29,6 +48,7 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
   const agendar = useMutation({
     mutationFn: api.criarAgendamento,
     onSuccess: (novo) => {
+      salvarTelefone(telefone);
       setConfirmado(novo);
       setHora('');
       qc.invalidateQueries({ queryKey: ['disponibilidade'] });
@@ -63,7 +83,9 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
   const servicoEscolhido = servicos.data?.find((s) => s.id === servicoId);
   const opcoes = servicoEscolhido?.opcoes ?? [];
   const faltaOpcao = opcoes.length > 0 && !opcao;
-  const podeConfirmar = Boolean(usuario && servicoId && data && hora) && !faltaOpcao && !agendar.isPending;
+  const dadosOk = nome.trim().length >= 2 && telefoneValido(telefone);
+  const podeConfirmar =
+    Boolean(usuario && servicoId && data && hora) && !faltaOpcao && dadosOk && !agendar.isPending;
 
   return (
     <div className="space-y-8">
@@ -180,6 +202,44 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
         )}
       </fieldset>
 
+      {usuario && (
+        <fieldset>
+          <legend className="mb-3 font-semibold">4. Seus dados</legend>
+          <p className="mb-3 text-sm text-zinc-500">O barbeiro usa esses dados para confirmar ou avisar sobre o seu horário.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">
+              Nome
+              <input
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                maxLength={80}
+                autoComplete="name"
+                required
+                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2"
+              />
+            </label>
+            <label className="text-sm">
+              Telefone / WhatsApp
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                placeholder="(84) 99999-8888"
+                value={telefone}
+                onChange={(e) => setTelefone(mascaraTelefone(e.target.value))}
+                aria-invalid={telefone !== '' && !telefoneValido(telefone)}
+                aria-describedby="ajuda-telefone"
+                required
+                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 aria-[invalid=true]:border-red-500"
+              />
+              <span id="ajuda-telefone" className="mt-1 block text-xs text-zinc-500">
+                {telefone !== '' && !telefoneValido(telefone) ? 'Informe o DDD e o número completo.' : 'Com DDD.'}
+              </span>
+            </label>
+          </div>
+        </fieldset>
+      )}
+
       {agendar.isError && <Aviso tipo="erro">{agendar.error.message}</Aviso>}
 
       <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
@@ -193,11 +253,23 @@ export function Agendar({ usuario, entrar, verMeusHorarios }: Props) {
             {faltaOpcao ? 'Escolha o tipo de corte.' : 'Selecione serviço, dia e horário.'}
           </p>
         )}
+        {servicoEscolhido && hora && !faltaOpcao && usuario && !dadosOk && (
+          <p className="mt-1 text-sm text-zinc-500">
+            Preencha seu nome e telefone.
+          </p>
+        )}
         {usuario ? (
           <button
             disabled={!podeConfirmar}
             onClick={() =>
-              agendar.mutate({ servicoId, data, hora, clienteNome: usuario.nome, opcao: opcao || undefined })
+              agendar.mutate({
+                servicoId,
+                data,
+                hora,
+                clienteNome: nome.trim(),
+                clienteTelefone: telefone,
+                opcao: opcao || undefined,
+              })
             }
             className="mt-4 rounded-lg bg-amber-400 px-6 py-3 font-semibold text-zinc-950 hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
           >

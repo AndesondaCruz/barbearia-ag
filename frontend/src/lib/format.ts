@@ -15,7 +15,21 @@ export function formatarData(data: string): string {
 /** Nome do serviço com a variação escolhida, ex.: "Corte (Tesoura)". */
 export const nomeDoServico = (servico: string, opcao?: string) => (opcao ? `${servico} (${opcao})` : servico);
 
-export const mesAtual = () => hojeIso().slice(0, 7);
+/** Máscara progressiva enquanto digita: (84) 99999-8888 ou (84) 3312-0000. */
+export function mascaraTelefone(valor: string): string {
+  const d = valor.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : '';
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+export const telefoneValido = (valor: string) => /^\d{10,11}$/.test(valor.replace(/\D/g, ''));
+
+/** Link que abre a conversa no WhatsApp (código do Brasil + DDD + número). */
+export const linkWhatsApp = (digitos: string) => `https://wa.me/55${digitos}`;
+
+export const mesAtual =() => hojeIso().slice(0, 7);
 
 export function formatarMes(mes: string): string {
   const [a, m] = mes.split('-').map(Number);

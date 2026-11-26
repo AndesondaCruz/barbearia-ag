@@ -30,6 +30,17 @@ export function chaveDoId(id: string): { data: string; hora: string } {
 
 const STATUS_VALIDOS: StatusAgendamento[] = ['confirmado', 'cancelado', 'concluido'];
 
+/**
+ * Telefone brasileiro com DDD: 10 dígitos (fixo) ou 11 (celular, começando com 9).
+ * Aceita qualquer formatação na entrada e guarda só os dígitos, ex.: "84999998888".
+ */
+export function normalizarTelefone(valor: unknown): string {
+  const digitos = typeof valor === 'string' ? valor.replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '') : '';
+  const valido = /^[1-9]{2}\d{8}$/.test(digitos) || /^[1-9]{2}9\d{8}$/.test(digitos);
+  if (!valido) throw badRequest('Informe um telefone válido com DDD, ex.: (84) 99999-8888');
+  return digitos;
+}
+
 /** Camada de negócios dos agendamentos: todas as regras da barbearia ficam aqui. */
 export function criarAgendamentosService(deps: Dependencias) {
   const agora = () => agoraLocal(deps.agora?.());
@@ -110,7 +121,8 @@ export function criarAgendamentosService(deps: Dependencias) {
       if (typeof servicoId !== 'string' || !servicoId) throw badRequest('servicoId é obrigatório');
       if (!isData(data)) throw badRequest('data deve estar no formato YYYY-MM-DD');
       if (!isHora(hora)) throw badRequest('hora deve estar no formato HH:MM');
-      if (!clienteNome) throw badRequest('clienteNome é obrigatório');
+      if (clienteNome.length < 2) throw badRequest('Informe seu nome');
+      const clienteTelefone = normalizarTelefone(body.clienteTelefone);
 
       const servico = await deps.servicos.buscar(servicoId);
       if (!servico) throw badRequest('Serviço inexistente');
@@ -136,6 +148,7 @@ export function criarAgendamentosService(deps: Dependencias) {
         id: idDoAgendamento(data, hora),
         clienteId: usuario.id,
         clienteNome,
+        clienteTelefone,
         servicoId: servico.id,
         servicoNome: servico.nome,
         opcao,

@@ -16,6 +16,8 @@ export interface Agendamento {
   id: string;
   clienteId: string;
   clienteNome: string;
+  /** Só dígitos, com DDD. Opcional porque agendamentos antigos não têm. */
+  clienteTelefone?: string;
   servicoId: string;
   servicoNome: string;
   /** Variação escolhida (ex.: "Tesoura"), quando o serviço tem opções. */

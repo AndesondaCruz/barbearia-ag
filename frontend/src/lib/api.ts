@@ -17,6 +17,7 @@ export interface Agendamento {
   data: string;
   hora: string;
   clienteNome: string;
+  clienteTelefone?: string;
   servicoNome: string;
   opcao?: string;
   precoCentavos: number;
@@ -94,7 +95,14 @@ export const api = {
 
   listarAgendamentos: (data?: string) =>
     requisicao<Agendamento[]>('GET', `/agendamentos${data ? `?data=${data}` : ''}`),
-  criarAgendamento: (a: { servicoId: string; data: string; hora: string; clienteNome: string; opcao?: string }) =>
+  criarAgendamento: (a: {
+    servicoId: string;
+    data: string;
+    hora: string;
+    clienteNome: string;
+    clienteTelefone: string;
+    opcao?: string;
+  }) =>
     requisicao<Agendamento>('POST', '/agendamentos', a),
   alterarStatus: (id: string, status: StatusAgendamento) =>
     requisicao<Agendamento>('PATCH', `/agendamentos/${encodeURIComponent(id)}`, { status }),
